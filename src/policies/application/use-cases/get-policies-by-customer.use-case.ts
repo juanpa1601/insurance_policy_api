@@ -13,6 +13,8 @@ export class GetPoliciesByCustomerUseCase {
   ) {}
 
   async execute(customerId: string): Promise<Policy[]> {
+    // 1) Se delega directamente al repositorio la búsqueda de todas las pólizas
+    //    asociadas al customerId. Retorna un array vacío si el cliente no tiene pólizas.
     return this.policyRepository.findByCustomerId(customerId);
   }
 }

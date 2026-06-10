@@ -27,27 +27,37 @@ export class ChangePolicyStatusUseCase {
   }
 
   async execute(
-    policyId: string, 
+    policyId: string,
     targetStatus: PolicyStatus
   ): Promise<Policy> {
-    // Busca la poliza; si no existe, lanza una excepcion
+    // 1) Se busca la póliza en BD por su ID.
+    //    Si no existe, se lanza PolicyNotFoundException (HTTP 404).
     const policy: Policy | null = await this.policyRepository.findById(policyId);
     if (!policy) throw new PolicyNotFoundException(policyId);
-    // Obtiene el estado actual de la poliza
+
+    // 2) Se obtiene el objeto de estado actual desde el Map (ej: QuotedState, ActiveState).
+    //    Este objeto encapsula las transiciones válidas para ese estado.
     const currentState: PolicyStatePort = this.stateMap.get(policy.status)!;
 
-    // State: delega la validacion al estado actual; lanza si la transicion es invalida
+    // 3) Se delega al estado actual la validación de la transición solicitada.
+    //    Si la transición no está permitida, el estado lanza InvalidStateTransitionException (HTTP 400).
+    //    Si targetStatus es igual al estado actual, retorna el mismo status (idempotente).
     const newStatus: PolicyStatus = currentState.transitionTo(targetStatus);
 
-    // Si la transicion es idempotente, retorna sin modificar ni publicar evento
+    // 4) Si la transición es idempotente (mismo estado), se retorna la póliza sin cambios
+    //    y sin publicar ningún evento.
     if (newStatus === policy.status) return policy;
 
+    // 5) Se crea una nueva instancia inmutable de la póliza con el estado actualizado.
+    //    La cobertura y la prima mensual permanecen invariables.
     const updatedPolicy: Policy = policy.withStatus(newStatus);
     const saved: Policy = await this.policyRepository.save(updatedPolicy);
 
-    // Observer: publica el evento correspondiente a la transicion
+    // 6) Se resuelve el topic de Kafka correspondiente a la transición ejecutada
+    //    y se publica el evento de dominio con el payload completo.
+    //    Los consumers (NotificationsConsumer, AuditConsumer) reaccionan de forma independiente.
     const topic: string = this.resolveTopic(
-      policy.status, 
+      policy.status,
       newStatus
     );
     await this.eventPublisher.publish(topic, {
@@ -60,6 +70,7 @@ export class ChangePolicyStatusUseCase {
       timestamp: new Date().toISOString(),
     });
 
+    // 7) Se retorna la póliza con el nuevo estado persistido.
     return saved;
   }
 

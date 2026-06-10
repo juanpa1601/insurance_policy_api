@@ -53,33 +53,47 @@ export class CreatePolicyUseCase {
   }
 
   async execute(command: CreatePolicyCommand): Promise<Policy> {
+    // 1) Se verifica que el cliente exista y esté activo en BD.
+    //    Si no existe o está inactivo, se lanza CustomerNotFoundException (HTTP 404).
     const customer: Customer | null = await this.customerRepository.findById(command.customerId);
     if (!customer || !customer.isActive) {
       throw new CustomerNotFoundException(command.customerId);
     }
 
+    // 2) Se resuelve la factory correspondiente al ramo (AUTO, LIFE, HOME, HEALTH)
+    //    usando el Map construido en el constructor. Sin switch. Si el ramo no está
+    //    registrado, se lanza UnsupportedBranchException (HTTP 400).
     const factory: PolicyFactoryPort | undefined = this.factoryMap.get(command.branch);
     if (!factory) throw new UnsupportedBranchException(command.branch);
 
+    // 3) Se resuelve la estrategia de tarificación (STANDARD, RISK_BASED, LOYALTY)
+    //    usando el Map de estrategias. Sin switch. Si la estrategia no está registrada,
+    //    se lanza UnsupportedRatingStrategyException (HTTP 400).
     const strategy: RatingStrategyPort | undefined = this.strategyMap.get(command.ratingStrategy);
     if (!strategy) throw new UnsupportedRatingStrategyException(command.ratingStrategy);
 
+    // 4) Se construye el Value Object RiskProfile a partir de los datos del comando.
     const riskProfile: RiskProfile = new RiskProfile(command.riskProfile);
 
-    // Strategy: valida los datos antes de calcular
+    // 5) Se delega a la estrategia la validación de los datos del perfil de riesgo.
+    //    Ej: RISK_BASED exige riskScore [0-100]; LOYALTY exige customerSince con antigüedad >= 2 años.
     strategy.validate(riskProfile);
 
-    // Factory Method: produce la cobertura del ramo sin switch
+    // 6) Se delega a la factory la creación de la cobertura por defecto del ramo
+    //    (coverageAmount, deductible, termMonths, etc.) y la obtención de la prima base.
     const coverage: Coverage = factory.createDefaultCoverage();
     const basePremium: number = factory.getBasePremium();
 
-    // Strategy: calcula la prima ajustada
+    // 7) Se delega a la estrategia el cálculo de la prima mensual ajustada
+    //    aplicando el factor correspondiente sobre la prima base del ramo.
     const monthlyPremium: number = strategy.calculatePremium(
-      basePremium, 
+      basePremium,
       riskProfile
     );
 
-    // Builder: ensambla la poliza de forma fluida; build() asigna QUOTED
+    // 8) Se ensambla la póliza usando el Builder de forma fluida.
+    //    build() valida que todos los campos requeridos estén presentes
+    //    y asigna PolicyStatus.QUOTED como estado inicial obligatorio.
     const policy: Policy = new PolicyBuilder()
       .withId(uuidv4())
       .withPolicyNumber(this.sequencer.next())
@@ -91,6 +105,7 @@ export class CreatePolicyUseCase {
       .withRiskProfile(riskProfile)
       .build();
 
+    // 9) Se persiste la póliza en BD y se retorna la entidad guardada.
     return this.policyRepository.save(policy);
   }
 }
