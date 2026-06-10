@@ -1,0 +1,7 @@
+export enum PolicyStatus {
+  QUOTED = 'QUOTED',
+  ISSUED = 'ISSUED',
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  CANCELLED = 'CANCELLED',
+}
