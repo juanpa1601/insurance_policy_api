@@ -29,7 +29,10 @@ export class LoyaltyRatingStrategy implements RatingStrategyPort {
     }
   }
 
-  calculatePremium(basePremium: number, _riskProfile: RiskProfile): number {
+  calculatePremium(
+    basePremium: number, 
+    _riskProfile: RiskProfile
+  ): number {
     return basePremium * this.config.loyaltyDiscountFactor;
   }
 }

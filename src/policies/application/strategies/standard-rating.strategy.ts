@@ -13,7 +13,10 @@ export class StandardRatingStrategy implements RatingStrategyPort {
     // Sin validaciones adicionales: cualquier perfil es valido para STANDARD
   }
 
-  calculatePremium(basePremium: number, _riskProfile: RiskProfile): number {
+  calculatePremium(
+    basePremium: number, 
+    _riskProfile: RiskProfile
+  ): number {
     return basePremium;
   }
 }

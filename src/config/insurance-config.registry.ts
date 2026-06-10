@@ -13,10 +13,10 @@ export class InsuranceConfigRegistry {
     [Branch.TRAVEL]: 65_000,
   };
 
-  readonly loyaltyDiscountFactor = 0.85;
-  readonly loyaltyMinYears = 2;
-  readonly riskScoreMin = 0;
-  readonly riskScoreMax = 100;
+  readonly loyaltyDiscountFactor: number = 0.85;
+  readonly loyaltyMinYears: number = 2;
+  readonly riskScoreMin: number = 0;
+  readonly riskScoreMax: number = 100;
 
   getBasePremium(branch: Branch): number {
     return this.basePremiums[branch];

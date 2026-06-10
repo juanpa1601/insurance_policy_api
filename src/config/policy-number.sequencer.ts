@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common';
 // durante la vida del proceso.
 @Injectable()
 export class PolicyNumberSequencer {
-  private counter = 0;
+  private counter: number = 0;
 
   // Debe llamarse al iniciar la app para sincronizar con el ultimo registro en BD.
   initialize(lastSequence: number): void {
@@ -14,8 +14,8 @@ export class PolicyNumberSequencer {
 
   next(): string {
     this.counter++;
-    const year = new Date().getFullYear();
-    const sequence = String(this.counter).padStart(6, '0');
+    const year: number = new Date().getFullYear();
+    const sequence: string = String(this.counter).padStart(6, '0');
     return `POL-${year}-${sequence}`;
   }
 }

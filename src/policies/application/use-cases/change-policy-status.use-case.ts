@@ -1,4 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { 
+  Inject, 
+  Injectable 
+} from '@nestjs/common';
 import { Policy } from '../../domain/policy.entity';
 import { PolicyStatus } from '../../domain/enums/policy-status.enum';
 import type { PolicyRepositoryPort } from '../../domain/ports/policy.repository.port';
@@ -23,23 +26,26 @@ export class ChangePolicyStatusUseCase {
     this.stateMap = new Map(states.map((s) => [s.getStatus(), s]));
   }
 
-  async execute(policyId: string, targetStatus: PolicyStatus): Promise<Policy> {
-    const policy = await this.policyRepository.findById(policyId);
+  async execute(
+    policyId: string, 
+    targetStatus: PolicyStatus
+  ): Promise<Policy> {
+    const policy: Policy | null = await this.policyRepository.findById(policyId);
     if (!policy) throw new PolicyNotFoundException(policyId);
 
-    const currentState = this.stateMap.get(policy.status)!;
+    const currentState: PolicyStatePort = this.stateMap.get(policy.status)!;
 
     // State: delega la validacion al estado actual; lanza si la transicion es invalida
-    const newStatus = currentState.transitionTo(targetStatus);
+    const newStatus: PolicyStatus = currentState.transitionTo(targetStatus);
 
     // Si la transicion es idempotente, retorna sin modificar ni publicar evento
     if (newStatus === policy.status) return policy;
 
-    const updatedPolicy = policy.withStatus(newStatus);
-    const saved = await this.policyRepository.save(updatedPolicy);
+    const updatedPolicy: Policy = policy.withStatus(newStatus);
+    const saved: Policy = await this.policyRepository.save(updatedPolicy);
 
     // Observer: publica el evento correspondiente a la transicion
-    const topic = this.resolveTopic(policy.status, newStatus);
+    const topic: string = this.resolveTopic(policy.status, newStatus);
     await this.eventPublisher.publish(topic, {
       policyId: saved.id,
       policyNumber: saved.policyNumber,
@@ -53,7 +59,10 @@ export class ChangePolicyStatusUseCase {
     return saved;
   }
 
-  private resolveTopic(from: PolicyStatus, to: PolicyStatus): string {
+  private resolveTopic(
+    from: PolicyStatus, 
+    to: PolicyStatus
+  ): string {
     if (to === PolicyStatus.ISSUED) return PolicyTopics.ISSUED;
     if (to === PolicyStatus.ACTIVE && from === PolicyStatus.SUSPENDED) return PolicyTopics.REACTIVATED;
     if (to === PolicyStatus.ACTIVE) return PolicyTopics.ACTIVATED;

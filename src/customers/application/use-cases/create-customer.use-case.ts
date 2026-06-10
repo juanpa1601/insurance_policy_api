@@ -32,7 +32,7 @@ export class CreateCustomerUseCase {
       email: command.email,
       isActive: true,
       createdAt: now,
-      updatedAt: now,
+      updatedAt: now
     });
 
     return this.customerRepository.save(customer);

@@ -9,7 +9,7 @@ export class CustomerMapper {
       email: orm.email,
       isActive: orm.isActive,
       createdAt: orm.createdAt,
-      updatedAt: orm.updatedAt,
+      updatedAt: orm.updatedAt
     });
   }
 

@@ -27,7 +27,10 @@ export class RiskBasedRatingStrategy implements RatingStrategyPort {
     }
   }
 
-  calculatePremium(basePremium: number, riskProfile: RiskProfile): number {
+  calculatePremium(
+    basePremium: number, 
+    riskProfile: RiskProfile
+  ): number {
     return basePremium * (1 + riskProfile.riskScore! / 100);
   }
 }

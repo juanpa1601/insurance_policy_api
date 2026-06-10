@@ -74,7 +74,10 @@ export class CreatePolicyUseCase {
     const basePremium: number = factory.getBasePremium();
 
     // Strategy: calcula la prima ajustada
-    const monthlyPremium: number = strategy.calculatePremium(basePremium, riskProfile);
+    const monthlyPremium: number = strategy.calculatePremium(
+      basePremium, 
+      riskProfile
+    );
 
     // Builder: ensambla la poliza de forma fluida; build() asigna QUOTED
     const policy: Policy = new PolicyBuilder()

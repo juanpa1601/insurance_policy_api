@@ -7,7 +7,7 @@ import { PolicyStatePort } from './policy-state.port';
 export class ActiveState implements PolicyStatePort {
   private static readonly ALLOWED_TRANSITIONS = [
     PolicyStatus.SUSPENDED,
-    PolicyStatus.CANCELLED,
+    PolicyStatus.CANCELLED
   ];
 
   getStatus(): PolicyStatus {

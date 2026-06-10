@@ -65,7 +65,7 @@ export class PolicyBuilder {
     this.assertPresent(this._monthlyPremium, 'monthlyPremium');
     this.assertPresent(this._riskProfile, 'riskProfile');
 
-    const now = new Date();
+    const now: Date = new Date();
     return new Policy({
       id: this._id!,
       policyNumber: this._policyNumber!,
@@ -81,7 +81,10 @@ export class PolicyBuilder {
     });
   }
 
-  private assertPresent(value: unknown, field: string): void {
+  private assertPresent(
+    value: unknown, 
+    field: string
+  ): void {
     if (value === undefined || value === null) {
       throw new Error(`PolicyBuilder: field '${field}' is required`);
     }
