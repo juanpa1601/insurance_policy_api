@@ -6,5 +6,8 @@ import { RiskProfile } from '../value-objects/risk-profile.vo';
 export interface RatingStrategyPort {
   getName(): RatingStrategyType;
   validate(riskProfile: RiskProfile): void;
-  calculatePremium(basePremium: number, riskProfile: RiskProfile): number;
+  calculatePremium(
+    basePremium: number, 
+    riskProfile: RiskProfile
+  ): number;
 }

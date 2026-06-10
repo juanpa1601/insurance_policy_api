@@ -30,9 +30,10 @@ export class ChangePolicyStatusUseCase {
     policyId: string, 
     targetStatus: PolicyStatus
   ): Promise<Policy> {
+    // Busca la poliza; si no existe, lanza una excepcion
     const policy: Policy | null = await this.policyRepository.findById(policyId);
     if (!policy) throw new PolicyNotFoundException(policyId);
-
+    // Obtiene el estado actual de la poliza
     const currentState: PolicyStatePort = this.stateMap.get(policy.status)!;
 
     // State: delega la validacion al estado actual; lanza si la transicion es invalida
@@ -45,7 +46,10 @@ export class ChangePolicyStatusUseCase {
     const saved: Policy = await this.policyRepository.save(updatedPolicy);
 
     // Observer: publica el evento correspondiente a la transicion
-    const topic: string = this.resolveTopic(policy.status, newStatus);
+    const topic: string = this.resolveTopic(
+      policy.status, 
+      newStatus
+    );
     await this.eventPublisher.publish(topic, {
       policyId: saved.id,
       policyNumber: saved.policyNumber,
