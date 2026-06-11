@@ -10,7 +10,6 @@ import type { PolicyRepositoryPort } from '../../domain/ports/policy.repository.
 import type { PolicyFactoryPort } from '../../domain/ports/policy-factory.port';
 import type { RatingStrategyPort } from '../../domain/ports/rating-strategy.port';
 import type { CustomerRepositoryPort } from '../../../customers/domain/ports/customer.repository.port';
-import type { EventPublisherPort } from '../../../shared/events/domain/ports/event-publisher.port';
 import { RiskProfile } from '../../domain/value-objects/risk-profile.vo';
 import { PolicyBuilder } from '../builders/policy.builder';
 import { UnsupportedBranchException } from '../../domain/exceptions/unsupported-branch.exception';
@@ -41,8 +40,6 @@ export class CreatePolicyUseCase {
     factories: PolicyFactoryPort[],
     @Inject('RATING_STRATEGIES')
     strategies: RatingStrategyPort[],
-    @Inject('EventPublisherPort')
-    private readonly eventPublisher: EventPublisherPort,
     private readonly sequencer: PolicyNumberSequencer,
   ) {
     // Se construye el mapa una sola vez en el constructor.
