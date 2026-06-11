@@ -16,6 +16,7 @@ import { CreatePolicyUseCase } from '../../application/use-cases/create-policy.u
 import { ChangePolicyStatusUseCase } from '../../application/use-cases/change-policy-status.use-case';
 import { GetPolicyUseCase } from '../../application/use-cases/get-policy.use-case';
 import { GetPoliciesByCustomerUseCase } from '../../application/use-cases/get-policies-by-customer.use-case';
+import { GetAllPoliciesUseCase } from '../../application/use-cases/get-all-policies.use-case';
 import { CreatePolicyDto } from './dtos/create-policy.dto';
 import { ChangeStatusDto } from './dtos/change-status.dto';
 
@@ -26,7 +27,8 @@ export class PoliciesController {
     private readonly createPolicy: CreatePolicyUseCase,
     private readonly changePolicyStatus: ChangePolicyStatusUseCase,
     private readonly getPolicy: GetPolicyUseCase,
-    private readonly getPoliciesByCustomer: GetPoliciesByCustomerUseCase
+    private readonly getPoliciesByCustomer: GetPoliciesByCustomerUseCase,
+    private readonly getAllPolicies: GetAllPoliciesUseCase,
   ) {}
 
   @Post()
@@ -42,6 +44,13 @@ export class PoliciesController {
       ratingStrategy: dto.ratingStrategy,
       riskProfile: dto.riskProfile ?? {},
     });
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Listar todas las pólizas' })
+  @ApiResponse({ status: 200, description: 'Lista de pólizas' })
+  findAll() {
+    return this.getAllPolicies.execute();
   }
 
   @Get(':id')

@@ -21,6 +21,8 @@ import { CreatePolicyUseCase } from './application/use-cases/create-policy.use-c
 import { ChangePolicyStatusUseCase } from './application/use-cases/change-policy-status.use-case';
 import { GetPolicyUseCase } from './application/use-cases/get-policy.use-case';
 import { GetPoliciesByCustomerUseCase } from './application/use-cases/get-policies-by-customer.use-case';
+import { GetAllPoliciesUseCase } from './application/use-cases/get-all-policies.use-case';
+import { PolicySequencerInitializer } from './application/policy-sequencer.initializer';
 
 // Aplicacion - factories (Factory Method)
 import { AutoPolicyFactory } from './application/factories/auto-policy.factory';
@@ -141,6 +143,10 @@ import { CustomersModule } from '../customers/customers.module';
     ChangePolicyStatusUseCase,
     GetPolicyUseCase,
     GetPoliciesByCustomerUseCase,
+    GetAllPoliciesUseCase,
+
+    // Inicialización del secuenciador al arrancar
+    PolicySequencerInitializer,
   ],
 })
 export class PoliciesModule {}
