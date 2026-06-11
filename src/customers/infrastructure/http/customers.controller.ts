@@ -13,6 +13,7 @@ import {
 } from '@nestjs/swagger';
 import { CreateCustomerUseCase } from '../../application/use-cases/create-customer.use-case';
 import { GetCustomerUseCase } from '../../application/use-cases/get-customer.use-case';
+import { GetAllCustomersUseCase } from '../../application/use-cases/get-all-customers.use-case';
 import { CreateCustomerDto } from './dtos/create-customer.dto';
 import { Customer } from '../../domain/customer.entity';
 
@@ -21,7 +22,8 @@ import { Customer } from '../../domain/customer.entity';
 export class CustomersController {
   constructor(
     private readonly createCustomer: CreateCustomerUseCase,
-    private readonly getCustomer: GetCustomerUseCase
+    private readonly getCustomer: GetCustomerUseCase,
+    private readonly getAllCustomers: GetAllCustomersUseCase,
   ) {}
 
   @Post()
@@ -32,6 +34,13 @@ export class CustomersController {
   @ApiResponse({ status: 409, description: 'El email ya está registrado' })
   create(@Body() dto: CreateCustomerDto): Promise<Customer> {
     return this.createCustomer.execute({ name: dto.name, email: dto.email });
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Listar todos los clientes' })
+  @ApiResponse({ status: 200, description: 'Lista de clientes' })
+  findAll(): Promise<Customer[]> {
+    return this.getAllCustomers.execute();
   }
 
   @Get(':id')

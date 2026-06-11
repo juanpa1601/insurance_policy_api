@@ -4,6 +4,7 @@ import { CustomerOrmEntity } from './infrastructure/persistence/customer.orm-ent
 import { TypeOrmCustomerRepository } from './infrastructure/persistence/typeorm-customer.repository';
 import { CreateCustomerUseCase } from './application/use-cases/create-customer.use-case';
 import { GetCustomerUseCase } from './application/use-cases/get-customer.use-case';
+import { GetAllCustomersUseCase } from './application/use-cases/get-all-customers.use-case';
 import { CustomersController } from './infrastructure/http/customers.controller';
 
 @Module({
@@ -17,6 +18,7 @@ import { CustomersController } from './infrastructure/http/customers.controller'
     },
     CreateCustomerUseCase,
     GetCustomerUseCase,
+    GetAllCustomersUseCase,
   ],
   // Exportamos el port para que PoliciesModule pueda verificar si un cliente existe
   exports: ['CustomerRepositoryPort'],

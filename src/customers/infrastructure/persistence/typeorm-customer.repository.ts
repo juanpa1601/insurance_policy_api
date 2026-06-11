@@ -28,4 +28,9 @@ export class TypeOrmCustomerRepository implements CustomerRepositoryPort {
     const orm: CustomerOrmEntity | null = await this.ormRepository.findOne({ where: { email } });
     return orm ? CustomerMapper.toDomain(orm) : null;
   }
+
+  async findAll(): Promise<Customer[]> {
+    const orms: CustomerOrmEntity[] = await this.ormRepository.find();
+    return orms.map(CustomerMapper.toDomain);
+  }
 }
