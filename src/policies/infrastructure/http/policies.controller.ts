@@ -1,17 +1,13 @@
-import { 
-  Body, 
-  Controller, 
-  Get, 
-  HttpCode, 
-  Param, 
-  Patch, 
-  Post 
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
 } from '@nestjs/common';
-import { 
-  ApiOperation, 
-  ApiResponse, 
-  ApiTags 
-} from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreatePolicyUseCase } from '../../application/use-cases/create-policy.use-case';
 import { ChangePolicyStatusUseCase } from '../../application/use-cases/change-policy-status.use-case';
 import { GetPolicyUseCase } from '../../application/use-cases/get-policy.use-case';
@@ -33,9 +29,14 @@ export class PoliciesController {
 
   @Post()
   @HttpCode(201)
-  @ApiOperation({ summary: 'Cotizar/crear una póliza (Factory + Strategy + Builder → QUOTED)' })
+  @ApiOperation({
+    summary: 'Cotizar/crear una póliza (Factory + Strategy + Builder → QUOTED)',
+  })
   @ApiResponse({ status: 201, description: 'Póliza creada en estado QUOTED' })
-  @ApiResponse({ status: 400, description: 'Ramo/estrategia no soportado o datos inválidos' })
+  @ApiResponse({
+    status: 400,
+    description: 'Ramo/estrategia no soportado o datos inválidos',
+  })
   @ApiResponse({ status: 404, description: 'Cliente no encontrado o inactivo' })
   create(@Body() dto: CreatePolicyDto) {
     return this.createPolicy.execute({
@@ -70,7 +71,10 @@ export class PoliciesController {
   @Patch(':id/status')
   @HttpCode(200)
   @ApiOperation({ summary: 'Cambiar estado de la póliza (State + Observer)' })
-  @ApiResponse({ status: 200, description: 'Estado actualizado y evento publicado' })
+  @ApiResponse({
+    status: 200,
+    description: 'Estado actualizado y evento publicado',
+  })
   @ApiResponse({ status: 400, description: 'Transición de estado inválida' })
   @ApiResponse({ status: 404, description: 'Póliza no encontrada' })
   changeStatus(@Param('id') id: string, @Body() dto: ChangeStatusDto) {

@@ -1,6 +1,6 @@
 interface RiskProfileProps {
-  riskScore?: number;       // requerido por RISK_BASED: valor entre 0 y 100
-  customerSince?: number;   // requerido por LOYALTY: año desde que es cliente
+  riskScore?: number; // requerido por RISK_BASED: valor entre 0 y 100
+  customerSince?: number; // requerido por LOYALTY: año desde que es cliente
 }
 
 export class RiskProfile {
@@ -15,7 +15,9 @@ export class RiskProfile {
   toPlainObject(): RiskProfileProps {
     return {
       ...(this.riskScore !== undefined && { riskScore: this.riskScore }),
-      ...(this.customerSince !== undefined && { customerSince: this.customerSince }),
+      ...(this.customerSince !== undefined && {
+        customerSince: this.customerSince,
+      }),
     };
   }
 

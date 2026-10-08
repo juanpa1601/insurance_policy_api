@@ -20,17 +20,17 @@ export class RiskBasedRatingStrategy implements RatingStrategyPort {
       );
     }
     const { riskScoreMin, riskScoreMax } = this.config;
-    if (riskProfile.riskScore < riskScoreMin || riskProfile.riskScore > riskScoreMax) {
+    if (
+      riskProfile.riskScore < riskScoreMin ||
+      riskProfile.riskScore > riskScoreMax
+    ) {
       throw new InvalidRatingStrategyDataException(
         `riskProfile.riskScore must be between ${riskScoreMin} and ${riskScoreMax}`,
       );
     }
   }
 
-  calculatePremium(
-    basePremium: number, 
-    riskProfile: RiskProfile
-  ): number {
+  calculatePremium(basePremium: number, riskProfile: RiskProfile): number {
     return basePremium * (1 + riskProfile.riskScore! / 100);
   }
 }

@@ -72,7 +72,7 @@ export class PolicyBuilder {
       customerId: this._customerId!,
       branch: this._branch!,
       ratingStrategy: this._ratingStrategy!,
-      status: PolicyStatus.QUOTED,   // toda poliza nueva comienza en QUOTED
+      status: PolicyStatus.QUOTED, // toda poliza nueva comienza en QUOTED
       coverage: this._coverage!,
       monthlyPremium: this._monthlyPremium!,
       riskProfile: this._riskProfile!,
@@ -81,10 +81,7 @@ export class PolicyBuilder {
     });
   }
 
-  private assertPresent(
-    value: unknown, 
-    field: string
-  ): void {
+  private assertPresent(value: unknown, field: string): void {
     if (value === undefined || value === null) {
       throw new Error(`PolicyBuilder: field '${field}' is required`);
     }

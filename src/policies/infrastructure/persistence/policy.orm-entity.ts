@@ -3,7 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   PrimaryColumn,
-  UpdateDateColumn
+  UpdateDateColumn,
 } from 'typeorm';
 import { Branch } from '../../domain/enums/branch.enum';
 import { PolicyStatus } from '../../domain/enums/policy-status.enum';

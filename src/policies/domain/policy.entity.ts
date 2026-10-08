@@ -25,8 +25,8 @@ export class Policy {
   readonly branch: Branch;
   readonly ratingStrategy: RatingStrategyType;
   readonly status: PolicyStatus;
-  readonly coverage: Coverage;         // inmutable tras la creación
-  readonly monthlyPremium: number;     // inmutable tras la creación
+  readonly coverage: Coverage; // inmutable tras la creación
+  readonly monthlyPremium: number; // inmutable tras la creación
   readonly riskProfile: RiskProfile;
   readonly createdAt: Date;
   readonly updatedAt: Date;

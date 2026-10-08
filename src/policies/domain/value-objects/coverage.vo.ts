@@ -1,4 +1,4 @@
-interface CoverageProps {
+export interface CoverageProps {
   coverageAmount: number;
   termMonths: number;
   deductible?: number;
@@ -29,9 +29,13 @@ export class Coverage {
       coverageAmount: this.coverageAmount,
       termMonths: this.termMonths,
       ...(this.deductible !== undefined && { deductible: this.deductible }),
-      ...(this.beneficiaryRequired !== undefined && { beneficiaryRequired: this.beneficiaryRequired }),
+      ...(this.beneficiaryRequired !== undefined && {
+        beneficiaryRequired: this.beneficiaryRequired,
+      }),
       ...(this.copayRate !== undefined && { copayRate: this.copayRate }),
-      ...(this.waitingPeriodDays !== undefined && { waitingPeriodDays: this.waitingPeriodDays }),
+      ...(this.waitingPeriodDays !== undefined && {
+        waitingPeriodDays: this.waitingPeriodDays,
+      }),
     };
   }
 

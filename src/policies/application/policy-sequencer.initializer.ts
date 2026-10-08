@@ -15,6 +15,8 @@ export class PolicySequencerInitializer implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     const max = await this.policyRepository.findMaxSequence();
     this.sequencer.initialize(max);
-    this.logger.log(`Secuenciador inicializado en ${max}. Próximo número: POL-${new Date().getFullYear()}-${String(max + 1).padStart(6, '0')}`);
+    this.logger.log(
+      `Secuenciador inicializado en ${max}. Próximo número: POL-${new Date().getFullYear()}-${String(max + 1).padStart(6, '0')}`,
+    );
   }
 }

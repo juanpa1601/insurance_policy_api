@@ -9,26 +9,36 @@ export class NotificationsConsumer {
 
   @EventPattern(PolicyTopics.ISSUED)
   handlePolicyIssued(@Payload() event: PolicyDomainEvent): void {
-    this.logger.log(`[NOTIFICATION] Policy ${event.policyNumber} issued for customer ${event.customerId}`);
+    this.logger.log(
+      `[NOTIFICATION] Policy ${event.policyNumber} issued for customer ${event.customerId}`,
+    );
   }
 
   @EventPattern(PolicyTopics.ACTIVATED)
   handlePolicyActivated(@Payload() event: PolicyDomainEvent): void {
-    this.logger.log(`[NOTIFICATION] Policy ${event.policyNumber} is now ACTIVE`);
+    this.logger.log(
+      `[NOTIFICATION] Policy ${event.policyNumber} is now ACTIVE`,
+    );
   }
 
   @EventPattern(PolicyTopics.SUSPENDED)
   handlePolicySuspended(@Payload() event: PolicyDomainEvent): void {
-    this.logger.log(`[NOTIFICATION] Policy ${event.policyNumber} has been SUSPENDED`);
+    this.logger.log(
+      `[NOTIFICATION] Policy ${event.policyNumber} has been SUSPENDED`,
+    );
   }
 
   @EventPattern(PolicyTopics.REACTIVATED)
   handlePolicyReactivated(@Payload() event: PolicyDomainEvent): void {
-    this.logger.log(`[NOTIFICATION] Policy ${event.policyNumber} has been REACTIVATED`);
+    this.logger.log(
+      `[NOTIFICATION] Policy ${event.policyNumber} has been REACTIVATED`,
+    );
   }
 
   @EventPattern(PolicyTopics.CANCELLED)
   handlePolicyCancelled(@Payload() event: PolicyDomainEvent): void {
-    this.logger.log(`[NOTIFICATION] Policy ${event.policyNumber} has been CANCELLED`);
+    this.logger.log(
+      `[NOTIFICATION] Policy ${event.policyNumber} has been CANCELLED`,
+    );
   }
 }

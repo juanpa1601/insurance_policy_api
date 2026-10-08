@@ -20,17 +20,21 @@ export class TypeOrmCustomerRepository implements CustomerRepositoryPort {
   }
 
   async findById(id: string): Promise<Customer | null> {
-    const orm: CustomerOrmEntity | null = await this.ormRepository.findOne({ where: { id } });
+    const orm: CustomerOrmEntity | null = await this.ormRepository.findOne({
+      where: { id },
+    });
     return orm ? CustomerMapper.toDomain(orm) : null;
   }
 
   async findByEmail(email: string): Promise<Customer | null> {
-    const orm: CustomerOrmEntity | null = await this.ormRepository.findOne({ where: { email } });
+    const orm: CustomerOrmEntity | null = await this.ormRepository.findOne({
+      where: { email },
+    });
     return orm ? CustomerMapper.toDomain(orm) : null;
   }
 
   async findAll(): Promise<Customer[]> {
     const orms: CustomerOrmEntity[] = await this.ormRepository.find();
-    return orms.map(CustomerMapper.toDomain);
+    return orms.map((orm) => CustomerMapper.toDomain(orm));
   }
 }

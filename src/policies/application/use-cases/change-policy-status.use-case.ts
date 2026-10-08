@@ -1,7 +1,4 @@
-import { 
-  Inject, 
-  Injectable 
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Policy } from '../../domain/policy.entity';
 import { PolicyStatus } from '../../domain/enums/policy-status.enum';
 import type { PolicyRepositoryPort } from '../../domain/ports/policy.repository.port';
@@ -26,13 +23,11 @@ export class ChangePolicyStatusUseCase {
     this.stateMap = new Map(states.map((s) => [s.getStatus(), s]));
   }
 
-  async execute(
-    policyId: string,
-    targetStatus: PolicyStatus
-  ): Promise<Policy> {
+  async execute(policyId: string, targetStatus: PolicyStatus): Promise<Policy> {
     // 1) Se busca la póliza en BD por su ID.
     //    Si no existe, se lanza PolicyNotFoundException (HTTP 404).
-    const policy: Policy | null = await this.policyRepository.findById(policyId);
+    const policy: Policy | null =
+      await this.policyRepository.findById(policyId);
     if (!policy) throw new PolicyNotFoundException(policyId);
 
     // 2) Se obtiene el objeto de estado actual desde el Map (ej: QuotedState, ActiveState).
@@ -56,10 +51,7 @@ export class ChangePolicyStatusUseCase {
     // 6) Se resuelve el topic de Kafka correspondiente a la transición ejecutada
     //    y se publica el evento de dominio con el payload completo.
     //    Los consumers (NotificationsConsumer, AuditConsumer) reaccionan de forma independiente.
-    const topic: string = this.resolveTopic(
-      policy.status,
-      newStatus
-    );
+    const topic: string = this.resolveTopic(policy.status, newStatus);
     await this.eventPublisher.publish(topic, {
       policyId: saved.id,
       policyNumber: saved.policyNumber,
@@ -74,12 +66,10 @@ export class ChangePolicyStatusUseCase {
     return saved;
   }
 
-  private resolveTopic(
-    from: PolicyStatus, 
-    to: PolicyStatus
-  ): string {
+  private resolveTopic(from: PolicyStatus, to: PolicyStatus): string {
     if (to === PolicyStatus.ISSUED) return PolicyTopics.ISSUED;
-    if (to === PolicyStatus.ACTIVE && from === PolicyStatus.SUSPENDED) return PolicyTopics.REACTIVATED;
+    if (to === PolicyStatus.ACTIVE && from === PolicyStatus.SUSPENDED)
+      return PolicyTopics.REACTIVATED;
     if (to === PolicyStatus.ACTIVE) return PolicyTopics.ACTIVATED;
     if (to === PolicyStatus.SUSPENDED) return PolicyTopics.SUSPENDED;
     return PolicyTopics.CANCELLED;

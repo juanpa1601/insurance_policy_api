@@ -1,5 +1,6 @@
 import { Policy } from '../../domain/policy.entity';
 import { Coverage } from '../../domain/value-objects/coverage.vo';
+import type { CoverageProps } from '../../domain/value-objects/coverage.vo';
 import { RiskProfile } from '../../domain/value-objects/risk-profile.vo';
 import { PolicyOrmEntity } from './policy.orm-entity';
 
@@ -12,9 +13,9 @@ export class PolicyMapper {
       branch: orm.branch,
       ratingStrategy: orm.ratingStrategy,
       status: orm.status,
-      coverage: Coverage.fromPlainObject(orm.coverage as any),
+      coverage: Coverage.fromPlainObject(orm.coverage as CoverageProps),
       monthlyPremium: Number(orm.monthlyPremium),
-      riskProfile: RiskProfile.fromPlainObject(orm.riskProfile as any),
+      riskProfile: RiskProfile.fromPlainObject(orm.riskProfile),
       createdAt: orm.createdAt,
       updatedAt: orm.updatedAt,
     });

@@ -1,7 +1,4 @@
-import { 
-  Inject, 
-  Injectable 
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { Policy } from '../../domain/policy.entity';
 import { Branch } from '../../domain/enums/branch.enum';
@@ -52,7 +49,9 @@ export class CreatePolicyUseCase {
   async execute(command: CreatePolicyCommand): Promise<Policy> {
     // 1) Se verifica que el cliente exista y esté activo en BD.
     //    Si no existe o está inactivo, se lanza CustomerNotFoundException (HTTP 404).
-    const customer: Customer | null = await this.customerRepository.findById(command.customerId);
+    const customer: Customer | null = await this.customerRepository.findById(
+      command.customerId,
+    );
     if (!customer || !customer.isActive) {
       throw new CustomerNotFoundException(command.customerId);
     }
@@ -60,14 +59,19 @@ export class CreatePolicyUseCase {
     // 2) Se resuelve la factory correspondiente al ramo (AUTO, LIFE, HOME, HEALTH)
     //    usando el Map construido en el constructor. Sin switch. Si el ramo no está
     //    registrado, se lanza UnsupportedBranchException (HTTP 400).
-    const factory: PolicyFactoryPort | undefined = this.factoryMap.get(command.branch);
+    const factory: PolicyFactoryPort | undefined = this.factoryMap.get(
+      command.branch,
+    );
     if (!factory) throw new UnsupportedBranchException(command.branch);
 
     // 3) Se resuelve la estrategia de tarificación (STANDARD, RISK_BASED, LOYALTY)
     //    usando el Map de estrategias. Sin switch. Si la estrategia no está registrada,
     //    se lanza UnsupportedRatingStrategyException (HTTP 400).
-    const strategy: RatingStrategyPort | undefined = this.strategyMap.get(command.ratingStrategy);
-    if (!strategy) throw new UnsupportedRatingStrategyException(command.ratingStrategy);
+    const strategy: RatingStrategyPort | undefined = this.strategyMap.get(
+      command.ratingStrategy,
+    );
+    if (!strategy)
+      throw new UnsupportedRatingStrategyException(command.ratingStrategy);
 
     // 4) Se construye el Value Object RiskProfile a partir de los datos del comando.
     const riskProfile: RiskProfile = new RiskProfile(command.riskProfile);
@@ -85,7 +89,7 @@ export class CreatePolicyUseCase {
     //    aplicando el factor correspondiente sobre la prima base del ramo.
     const monthlyPremium: number = strategy.calculatePremium(
       basePremium,
-      riskProfile
+      riskProfile,
     );
 
     // 8) Se ensambla la póliza usando el Builder de forma fluida.

@@ -1,8 +1,4 @@
-import { 
-  ArgumentsHost, 
-  Catch, 
-  ExceptionFilter 
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
 import { Response } from 'express';
 import { DomainException } from '../domain/domain.exception';
 
@@ -13,7 +9,7 @@ export class DomainExceptionFilter implements ExceptionFilter {
     response.status(exception.statusCode).json({
       statusCode: exception.statusCode,
       error: exception.name,
-      message: exception.message
+      message: exception.message,
     });
   }
 }

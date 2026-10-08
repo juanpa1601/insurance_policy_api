@@ -1,13 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { 
-  ClientsModule, 
-  Transport 
-} from '@nestjs/microservices';
-import { 
-  ConfigModule, 
-  ConfigService 
-} from '@nestjs/config';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 // Infraestructura - persistencia
 import { PolicyOrmEntity } from './infrastructure/persistence/policy.orm-entity';
@@ -83,7 +77,7 @@ import { CustomersModule } from '../customers/customers.module';
   controllers: [
     PoliciesController,
     NotificationsConsumer, // Consumer 1 - Observer
-    AuditConsumer,         // Consumer 2 - Observer
+    AuditConsumer, // Consumer 2 - Observer
   ],
   providers: [
     // Singleton: una sola instancia gestionada por el contenedor de DI
@@ -91,15 +85,15 @@ import { CustomersModule } from '../customers/customers.module';
     PolicyNumberSequencer,
 
     // Repository port → adapter
-    { 
-      provide: 'PolicyRepositoryPort', 
-      useClass: TypeOrmPolicyRepository 
+    {
+      provide: 'PolicyRepositoryPort',
+      useClass: TypeOrmPolicyRepository,
     },
 
     // Event publisher port → adapter Kafka
-    { 
-      provide: 'EventPublisherPort', 
-      useClass: KafkaEventPublisherAdapter 
+    {
+      provide: 'EventPublisherPort',
+      useClass: KafkaEventPublisherAdapter,
     },
 
     // Factory Method: array de todas las factories; el use case construye el Map

@@ -15,7 +15,7 @@ export class HealthPolicyFactory implements PolicyFactoryPort {
   createDefaultCoverage(): Coverage {
     return new Coverage({
       coverageAmount: 100_000_000,
-      copayRate: 0.20,
+      copayRate: 0.2,
       waitingPeriodDays: 30,
       termMonths: 12,
     });

@@ -20,24 +20,31 @@ export class TypeOrmPolicyRepository implements PolicyRepositoryPort {
   }
 
   async findById(id: string): Promise<Policy | null> {
-    const orm: PolicyOrmEntity | null = await this.ormRepository.findOne({ where: { id } });
+    const orm: PolicyOrmEntity | null = await this.ormRepository.findOne({
+      where: { id },
+    });
     return orm ? PolicyMapper.toDomain(orm) : null;
   }
 
   async findByCustomerId(customerId: string): Promise<Policy[]> {
-    const orms: PolicyOrmEntity[] = await this.ormRepository.find({ where: { customerId } });
-    return orms.map(PolicyMapper.toDomain);
+    const orms: PolicyOrmEntity[] = await this.ormRepository.find({
+      where: { customerId },
+    });
+    return orms.map((orm) => PolicyMapper.toDomain(orm));
   }
 
   async findAll(): Promise<Policy[]> {
     const orms: PolicyOrmEntity[] = await this.ormRepository.find();
-    return orms.map(PolicyMapper.toDomain);
+    return orms.map((orm) => PolicyMapper.toDomain(orm));
   }
 
   async findMaxSequence(): Promise<number> {
     const result = await this.ormRepository
       .createQueryBuilder('policy')
-      .select('MAX(CAST(SPLIT_PART(policy.policyNumber, \'-\', 3) AS INTEGER))', 'max')
+      .select(
+        "MAX(CAST(SPLIT_PART(policy.policyNumber, '-', 3) AS INTEGER))",
+        'max',
+      )
       .getRawOne<{ max: string | null }>();
     return result?.max ? parseInt(result.max, 10) : 0;
   }

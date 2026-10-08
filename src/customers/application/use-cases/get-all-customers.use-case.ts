@@ -1,7 +1,4 @@
-import {
-  Inject,
-  Injectable
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Customer } from '../../domain/customer.entity';
 import type { CustomerRepositoryPort } from '../../domain/ports/customer.repository.port';
 

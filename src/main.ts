@@ -1,13 +1,6 @@
 import { NestFactory } from '@nestjs/core';
-import { 
-  INestApplication, 
-  ValidationPipe 
-} from '@nestjs/common';
-import {
-  DocumentBuilder,
-  SwaggerModule,
-  OpenAPIObject
-} from '@nestjs/swagger';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule, OpenAPIObject } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { DomainExceptionFilter } from './shared/http/domain-exception.filter';
 
@@ -22,7 +15,7 @@ async function bootstrap(): Promise<void> {
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
-      transform: true
+      transform: true,
     }),
   );
 
@@ -34,13 +27,9 @@ async function bootstrap(): Promise<void> {
 
   const document: OpenAPIObject = SwaggerModule.createDocument(
     app,
-    swaggerConfig
+    swaggerConfig,
   );
-  SwaggerModule.setup(
-    'api/docs', 
-    app, 
-    document
-  );
+  SwaggerModule.setup('api/docs', app, document);
 
   const port: string | number = process.env.APP_PORT ?? 3000;
   await app.listen(port);
@@ -48,4 +37,4 @@ async function bootstrap(): Promise<void> {
   console.log(`Swagger docs at http://localhost:${port}/api/docs`);
 }
 
-bootstrap();
+void bootstrap();
