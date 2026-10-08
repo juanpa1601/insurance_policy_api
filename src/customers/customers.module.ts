@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Provider } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CustomerOrmEntity } from './infrastructure/persistence/customer.orm-entity';
 import { TypeOrmCustomerRepository } from './infrastructure/persistence/typeorm-customer.repository';
@@ -6,6 +6,14 @@ import { CreateCustomerUseCase } from './application/use-cases/create-customer.u
 import { GetCustomerUseCase } from './application/use-cases/get-customer.use-case';
 import { GetAllCustomersUseCase } from './application/use-cases/get-all-customers.use-case';
 import { CustomersController } from './infrastructure/http/customers.controller';
+
+// Casos de uso del módulo, sin el adaptador de persistencia (ver
+// POLICY_APPLICATION_PROVIDERS).
+export const CUSTOMER_APPLICATION_PROVIDERS: Provider[] = [
+  CreateCustomerUseCase,
+  GetCustomerUseCase,
+  GetAllCustomersUseCase,
+];
 
 @Module({
   imports: [TypeOrmModule.forFeature([CustomerOrmEntity])],
@@ -16,9 +24,7 @@ import { CustomersController } from './infrastructure/http/customers.controller'
       provide: 'CustomerRepositoryPort',
       useClass: TypeOrmCustomerRepository,
     },
-    CreateCustomerUseCase,
-    GetCustomerUseCase,
-    GetAllCustomersUseCase,
+    ...CUSTOMER_APPLICATION_PROVIDERS,
   ],
   // Exportamos el port para que PoliciesModule pueda verificar si un cliente existe
   exports: ['CustomerRepositoryPort'],

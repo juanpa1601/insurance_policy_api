@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Provider } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -51,6 +51,62 @@ import { PolicyNumberSequencer } from '../config/policy-number.sequencer';
 // Customers - port para validar cliente
 import { CustomersModule } from '../customers/customers.module';
 
+// Providers de dominio y aplicación, sin adaptadores de infraestructura.
+// Se exportan para que las pruebas de integración y e2e usen el mismo
+// cableado de DI que producción, sustituyendo solo los adaptadores
+// (repositorio y publicador de eventos).
+export const POLICY_APPLICATION_PROVIDERS: Provider[] = [
+  // Singleton: una sola instancia gestionada por el contenedor de DI
+  InsuranceConfigRegistry,
+  PolicyNumberSequencer,
+
+  // Factory Method: array de todas las factories; el use case construye el Map
+  {
+    provide: 'POLICY_FACTORIES',
+    useFactory: (config: InsuranceConfigRegistry) => [
+      new AutoPolicyFactory(config),
+      new LifePolicyFactory(config),
+      new HomePolicyFactory(config),
+      new HealthPolicyFactory(config),
+      new TravelPolicyFactory(config),
+    ],
+    inject: [InsuranceConfigRegistry],
+  },
+
+  // Strategy: array de todas las estrategias; el use case construye el Map
+  {
+    provide: 'RATING_STRATEGIES',
+    useFactory: (config: InsuranceConfigRegistry) => [
+      new StandardRatingStrategy(),
+      new RiskBasedRatingStrategy(config),
+      new LoyaltyRatingStrategy(config),
+    ],
+    inject: [InsuranceConfigRegistry],
+  },
+
+  // State: array de todos los estados; el use case construye el Map
+  {
+    provide: 'POLICY_STATES',
+    useFactory: () => [
+      new QuotedState(),
+      new IssuedState(),
+      new ActiveState(),
+      new SuspendedState(),
+      new CancelledState(),
+    ],
+  },
+
+  // Use cases
+  CreatePolicyUseCase,
+  ChangePolicyStatusUseCase,
+  GetPolicyUseCase,
+  GetPoliciesByCustomerUseCase,
+  GetAllPoliciesUseCase,
+
+  // Inicialización del secuenciador al arrancar
+  PolicySequencerInitializer,
+];
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([PolicyOrmEntity]),
@@ -80,9 +136,7 @@ import { CustomersModule } from '../customers/customers.module';
     AuditConsumer, // Consumer 2 - Observer
   ],
   providers: [
-    // Singleton: una sola instancia gestionada por el contenedor de DI
-    InsuranceConfigRegistry,
-    PolicyNumberSequencer,
+    ...POLICY_APPLICATION_PROVIDERS,
 
     // Repository port → adapter
     {
@@ -95,52 +149,6 @@ import { CustomersModule } from '../customers/customers.module';
       provide: 'EventPublisherPort',
       useClass: KafkaEventPublisherAdapter,
     },
-
-    // Factory Method: array de todas las factories; el use case construye el Map
-    {
-      provide: 'POLICY_FACTORIES',
-      useFactory: (config: InsuranceConfigRegistry) => [
-        new AutoPolicyFactory(config),
-        new LifePolicyFactory(config),
-        new HomePolicyFactory(config),
-        new HealthPolicyFactory(config),
-        new TravelPolicyFactory(config),
-      ],
-      inject: [InsuranceConfigRegistry],
-    },
-
-    // Strategy: array de todas las estrategias; el use case construye el Map
-    {
-      provide: 'RATING_STRATEGIES',
-      useFactory: (config: InsuranceConfigRegistry) => [
-        new StandardRatingStrategy(),
-        new RiskBasedRatingStrategy(config),
-        new LoyaltyRatingStrategy(config),
-      ],
-      inject: [InsuranceConfigRegistry],
-    },
-
-    // State: array de todos los estados; el use case construye el Map
-    {
-      provide: 'POLICY_STATES',
-      useFactory: () => [
-        new QuotedState(),
-        new IssuedState(),
-        new ActiveState(),
-        new SuspendedState(),
-        new CancelledState(),
-      ],
-    },
-
-    // Use cases
-    CreatePolicyUseCase,
-    ChangePolicyStatusUseCase,
-    GetPolicyUseCase,
-    GetPoliciesByCustomerUseCase,
-    GetAllPoliciesUseCase,
-
-    // Inicialización del secuenciador al arrancar
-    PolicySequencerInitializer,
   ],
 })
 export class PoliciesModule {}
