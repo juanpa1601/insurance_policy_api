@@ -1,11 +1,28 @@
 import { NestFactory } from '@nestjs/core';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule, OpenAPIObject } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { DomainExceptionFilter } from './shared/http/domain-exception.filter';
 
 async function bootstrap(): Promise<void> {
   const app: INestApplication = await NestFactory.create(AppModule);
+  const config: ConfigService = app.get(ConfigService);
+
+  // Observer: conecta el servidor Kafka para que los @EventPattern de
+  // NotificationsConsumer y AuditConsumer reciban los eventos publicados.
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.KAFKA,
+    options: {
+      client: {
+        brokers: [config.get<string>('KAFKA_BROKER', 'localhost:9092')],
+      },
+      consumer: {
+        groupId: config.get<string>('KAFKA_GROUP_ID', 'insurance-group'),
+      },
+    },
+  });
 
   app.setGlobalPrefix('api');
 
@@ -30,6 +47,8 @@ async function bootstrap(): Promise<void> {
     swaggerConfig,
   );
   SwaggerModule.setup('api/docs', app, document);
+
+  await app.startAllMicroservices();
 
   const port: string | number = process.env.APP_PORT ?? 3000;
   await app.listen(port);
