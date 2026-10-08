@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { Customer } from '../../domain/customer.entity';
 import type { CustomerRepositoryPort } from '../../domain/ports/customer.repository.port';
 import { EmailAlreadyExistsException } from '../../domain/exceptions/email-already-exists.exception';
@@ -30,7 +30,7 @@ export class CreateCustomerUseCase {
     //    isActive en true por defecto y timestamps del momento de creación.
     const now: Date = new Date();
     const customer: Customer = new Customer({
-      id: uuidv4(),
+      id: randomUUID(),
       name: command.name,
       email: command.email,
       isActive: true,

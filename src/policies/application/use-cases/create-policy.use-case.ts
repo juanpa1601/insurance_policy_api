@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { Policy } from '../../domain/policy.entity';
 import { Branch } from '../../domain/enums/branch.enum';
 import { RatingStrategyType } from '../../domain/enums/rating-strategy-type.enum';
@@ -96,7 +96,7 @@ export class CreatePolicyUseCase {
     //    build() valida que todos los campos requeridos estén presentes
     //    y asigna PolicyStatus.QUOTED como estado inicial obligatorio.
     const policy: Policy = new PolicyBuilder()
-      .withId(uuidv4())
+      .withId(randomUUID())
       .withPolicyNumber(this.sequencer.next())
       .withCustomerId(command.customerId)
       .withBranch(command.branch)
