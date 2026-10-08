@@ -1,98 +1,90 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Insurance Policy API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST para gestionar clientes y pólizas de seguros, construida con NestJS y TypeScript sobre una arquitectura hexagonal (ports & adapters).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tecnologías
 
-## Description
+- NestJS 11 y TypeScript
+- PostgreSQL 16 con TypeORM
+- Kafka (KafkaJS vía `@nestjs/microservices`)
+- Swagger / OpenAPI (`@nestjs/swagger`)
+- class-validator y class-transformer
+- Docker Compose (PostgreSQL, Kafka en modo KRaft y Kafka UI)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Qué hace
 
-## Project setup
+- **Clientes:** crear, listar y consultar por id. Valida que el email no esté repetido.
+- **Pólizas:** emisión para 5 ramos (`AUTO`, `LIFE`, `HOME`, `HEALTH`, `TRAVEL`), con un número de póliza secuencial (`POL-AAAA-NNNNNN`), cobertura por defecto según el ramo y prima mensual calculada.
+- **Tarificación:** tres estrategias intercambiables:
+  - `STANDARD`: prima base del ramo.
+  - `RISK_BASED`: prima base × (1 + `riskScore`/100), con `riskScore` entre 0 y 100.
+  - `LOYALTY`: 15 % de descuento si el cliente tiene 2 o más años de antigüedad.
+- **Ciclo de vida:** máquina de estados con una clase por estado:
 
-```bash
-$ npm install
-```
+  ```
+  QUOTED → ISSUED → ACTIVE ⇄ SUSPENDED
+     └────────┴────────┴─────────┴──→ CANCELLED
+  ```
 
-## Compile and run the project
+  Una transición no permitida responde `400` con `InvalidStateTransitionException`.
+- **Eventos de dominio:** cada cambio de estado publica un evento en un topic de Kafka (`policy.issued`, `policy.activated`, `policy.suspended`, `policy.reactivated`, `policy.cancelled`).
 
-```bash
-# development
-$ npm run start
+### Patrones de diseño aplicados
 
-# watch mode
-$ npm run start:dev
+| Patrón | Dónde |
+|---|---|
+| Factory Method | `policies/application/factories`: una factory por ramo, resueltas con un `Map` (sin `switch`) |
+| Strategy | `policies/application/strategies`: algoritmos de tarificación |
+| Builder | `policies/application/builders/policy.builder.ts`: ensamblado validado del agregado `Policy` |
+| State | `policies/domain/states`: un estado por clase con sus transiciones permitidas |
+| Observer | Publicador de eventos (`EventPublisherPort` → adaptador Kafka) y consumers de auditoría y notificaciones |
+| Singleton | `config/insurance-config.registry.ts`: provider con scope singleton del contenedor de DI de NestJS |
 
-# production mode
-$ npm run start:prod
-```
+### Endpoints (prefijo `/api`)
 
-## Run tests
+| Método | Ruta | Descripción |
+|---|---|---|
+| POST | `/customers` | Crear cliente |
+| GET | `/customers` | Listar clientes |
+| GET | `/customers/:id` | Consultar cliente |
+| POST | `/policies` | Emitir (cotizar) póliza |
+| GET | `/policies` | Listar pólizas |
+| GET | `/policies/:id` | Consultar póliza |
+| GET | `/policies/customer/:customerId` | Pólizas de un cliente |
+| PATCH | `/policies/:id/status` | Cambiar estado (`{ "targetStatus": "ACTIVE" }`) |
 
-```bash
-# unit tests
-$ npm run test
+La documentación interactiva queda disponible en `http://localhost:3000/api/docs`.
 
-# e2e tests
-$ npm run test:e2e
+## Cómo ejecutarlo
 
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Requisitos: Node.js 20 o superior y Docker.
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+cp .env.example .env
+docker compose up -d        # PostgreSQL, Kafka y Kafka UI (http://localhost:8080)
+npm install
+npm run start:dev           # http://localhost:3000/api
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Si ya tienes PostgreSQL instalado localmente en el puerto 5432, cambia `DB_PORT` en `.env` (por ejemplo a `5433`).
 
-## Resources
+Ejemplo:
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+curl -X POST localhost:3000/api/customers -H "Content-Type: application/json" \
+  -d '{"name":"Ana","email":"ana@example.com"}'
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+curl -X POST localhost:3000/api/policies -H "Content-Type: application/json" \
+  -d '{"customerId":"<id>","branch":"AUTO","ratingStrategy":"RISK_BASED","riskProfile":{"riskScore":40}}'
+```
 
-## Support
+## Estado actual y pendientes
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- Probado localmente: creación de clientes y pólizas, cálculo de prima, transiciones de estado (válidas e inválidas) y publicación de eventos en los topics de Kafka.
+- Los consumers de auditoría y notificaciones están implementados, pero `main.ts` todavía no conecta el microservicio de Kafka (`connectMicroservice`), así que hoy no reciben los eventos.
+- TypeORM usa `synchronize: true` (solo apto para desarrollo; faltan migraciones).
+- No hay pruebas automatizadas propias: `test/` conserva el e2e de ejemplo de NestJS.
 
-## Stay in touch
+## Contexto
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Reto integrador de un proceso de formación en POO, SOLID, código limpio, arquitectura hexagonal y patrones de diseño. El enunciado está en [`CAPSTONE_CHALLENGE.md`](CAPSTONE_CHALLENGE.md). El frontend que consume esta API está en [insurance_policy_frontend](https://github.com/juanpa1601/insurance_policy_frontend).
