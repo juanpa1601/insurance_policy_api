@@ -1,10 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule, OpenAPIObject } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { DomainExceptionFilter } from './shared/http/domain-exception.filter';
+import { configureHttpApp } from './app.setup';
 
 async function bootstrap(): Promise<void> {
   const app: INestApplication = await NestFactory.create(AppModule);
@@ -24,17 +24,7 @@ async function bootstrap(): Promise<void> {
     },
   });
 
-  app.setGlobalPrefix('api');
-
-  app.useGlobalFilters(new DomainExceptionFilter());
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+  configureHttpApp(app);
 
   const swaggerConfig: Omit<OpenAPIObject, 'paths'> = new DocumentBuilder()
     .setTitle('Insurance Policy API')
