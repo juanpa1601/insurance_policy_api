@@ -1,5 +1,9 @@
 # Insurance Policy API
 
+[![CI](https://github.com/juanpa1601/insurance_policy_api/actions/workflows/ci.yml/badge.svg)](https://github.com/juanpa1601/insurance_policy_api/actions/workflows/ci.yml)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=juanpa1601_insurance_policy_api&metric=coverage)](https://sonarcloud.io/summary/new_code?id=juanpa1601_insurance_policy_api)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=juanpa1601_insurance_policy_api&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=juanpa1601_insurance_policy_api)
+
 API REST para gestionar clientes y pólizas de seguros, construida con NestJS y TypeScript sobre una arquitectura hexagonal (ports & adapters).
 
 ## Tecnologías
@@ -27,7 +31,7 @@ API REST para gestionar clientes y pólizas de seguros, construida con NestJS y 
   ```
 
   Una transición no permitida responde `400` con `InvalidStateTransitionException`.
-- **Eventos de dominio:** cada cambio de estado publica un evento en un topic de Kafka (`policy.issued`, `policy.activated`, `policy.suspended`, `policy.reactivated`, `policy.cancelled`).
+- **Eventos de dominio:** cada cambio de estado publica un evento en un topic de Kafka (`policy.issued`, `policy.activated`, `policy.suspended`, `policy.reactivated`, `policy.cancelled`) que consumen, de forma independiente, `AuditConsumer` y `NotificationsConsumer`.
 
 ### Patrones de diseño aplicados
 
@@ -57,7 +61,7 @@ La documentación interactiva queda disponible en `http://localhost:3000/api/doc
 
 ## Cómo ejecutarlo
 
-Requisitos: Node.js 20 o superior y Docker.
+Requisitos: Node.js 24 (la versión del CI) y Docker.
 
 ```bash
 cp .env.example .env
@@ -67,6 +71,21 @@ npm run start:dev           # http://localhost:3000/api
 ```
 
 Si ya tienes PostgreSQL instalado localmente en el puerto 5432, cambia `DB_PORT` en `.env` (por ejemplo a `5433`).
+
+Al cambiar el estado de una póliza, los dos consumers registran el evento en el log:
+
+```
+[NotificationsConsumer] [NOTIFICATION] Policy POL-2026-000011 is now ACTIVE
+[AuditConsumer] [AUDIT] policy=POL-2026-000011 | ISSUED → ACTIVE | customer=… | branch=HOME | at=…
+```
+
+Pruebas (no necesitan Docker):
+
+```bash
+npm test                  # toda la suite
+npm run test:unit         # o test:integration, test:e2e, test:bdd
+npm run test:cov          # con reporte de cobertura en coverage/
+```
 
 Ejemplo:
 
@@ -78,12 +97,39 @@ curl -X POST localhost:3000/api/policies -H "Content-Type: application/json" \
   -d '{"customerId":"<id>","branch":"AUTO","ratingStrategy":"RISK_BASED","riskProfile":{"riskScore":40}}'
 ```
 
-## Estado actual y pendientes
+## Calidad
 
-- Probado localmente: creación de clientes y pólizas, cálculo de prima, transiciones de estado (válidas e inválidas) y publicación de eventos en los topics de Kafka.
-- Los consumers de auditoría y notificaciones están implementados, pero `main.ts` todavía no conecta el microservicio de Kafka (`connectMicroservice`), así que hoy no reciben los eventos.
+La calidad se integra desde el primer commit (*shift-left*): cada push y cada pull request ejecutan lint sin warnings, typecheck, la suite completa con cobertura y el build en [GitHub Actions](.github/workflows/ci.yml). SonarCloud analiza el código con el reporte de cobertura de Jest.
+
+### Pirámide de pruebas
+
+| Nivel | Pruebas | Qué cubre | Dónde |
+|---|---:|---|---|
+| BDD (Gherkin en español) | 22 escenarios | Emisión, rechazos y ciclo de vida descritos como criterios de aceptación | `test/bdd/` |
+| API / E2E | 17 | Los 8 endpoints con supertest: validación de DTOs, códigos 400/404/409 y formato de error | `test/e2e/` |
+| Integración | 20 | Casos de uso con el cableado real de DI y adaptadores en memoria (ports & adapters) | `test/integration/` |
+| Unitarias | 98 | Estrategias de tarificación, matriz de 25 transiciones, builder, factories, mappers y consumers | `src/**/*.spec.ts` |
+| **Total** | **157** | | |
+
+Cobertura de la última ejecución local (`npm run test:cov`): **94,38 %** de sentencias, **81,03 %** de ramas, **87,07 %** de funciones y **94,39 %** de líneas. Lo que no se cubre son los adaptadores que necesitan infraestructura real (repositorios TypeORM, publicador de Kafka y `AppModule`); el flujo con Kafka se verificó manualmente con Docker Compose.
+
+Las historias de usuario (INVEST), sus criterios de aceptación y los edge cases están en [`docs/historias-usuario.md`](docs/historias-usuario.md), junto con los hallazgos abiertos.
+
+### Pendientes conocidos
+
 - TypeORM usa `synchronize: true` (solo apto para desarrollo; faltan migraciones).
-- No hay pruebas automatizadas propias: `test/` conserva el e2e de ejemplo de NestJS.
+- Los hallazgos H-01 a H-05 de [`docs/historias-usuario.md`](docs/historias-usuario.md#hallazgos-y-preguntas-abiertas): redondeo de la prima, rango de `customerSince`, idempotencia de `CANCELLED`, eventos perdidos si Kafka falla y concurrencia.
+- Pruebas de los adaptadores contra PostgreSQL y Kafka reales (p. ej. con Testcontainers).
+
+## Cómo usé IA
+
+Trabajé con **Claude Code** como copiloto, revisando y ejecutando todo lo que proponía:
+
+- **Escenarios Gherkin:** a partir del código y de las historias de usuario, Claude Code propuso los criterios de aceptación y los escenarios en español. Yo los revisé antes de automatizarlos con jest-cucumber.
+- **Edge cases:** Claude Code los propuso y verificó cada límite ejecutando el código (`riskScore` 0 y 100, exactamente 2 años de antigüedad, transición al mismo estado). Así aparecieron los hallazgos H-01 a H-05, por ejemplo una prima de `128400.00000000001` por falta de redondeo.
+- **Revisión de código:** detectó que los consumers de Kafka nunca recibían eventos (faltaba `connectMicroservice`), que `uuid` v14 no cargaba en Jest y que el lockfile generado en Windows rompía `npm ci` en Linux. Este último se confirmó simulando el pipeline en un contenedor `node:24`.
+
+Las cifras de este README (conteos y cobertura) salen de ejecuciones reales de la suite, no de estimaciones.
 
 ## Contexto
 
